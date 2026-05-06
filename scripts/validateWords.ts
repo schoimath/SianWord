@@ -29,6 +29,14 @@ const ids = new Set<string>();
 const wordTexts = new Set<string>();
 const counts: Record<PartOfSpeech, number> = { noun: 0, verb: 0, adjective: 0 };
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function definitionContainsAnswerWord(word: string, enDefinition: string): boolean {
+  return new RegExp(`\\b${escapeRegExp(word)}\\b`, "i").test(enDefinition);
+}
+
 for (const word of words) {
   if (ids.has(word.id)) errors.push(`Duplicate id: ${word.id}`);
   ids.add(word.id);
@@ -38,6 +46,9 @@ for (const word of words) {
   else counts[word.partOfSpeech] += 1;
   for (const field of ["koDefinition", "enDefinition", "example", "exampleKo"] as const) {
     if (!word[field]) errors.push(`Empty ${field}: ${word.id}`);
+  }
+  if (definitionContainsAnswerWord(word.word, word.enDefinition)) {
+    errors.push(`enDefinition contains answer word: ${word.id} (${word.word})`);
   }
 }
 

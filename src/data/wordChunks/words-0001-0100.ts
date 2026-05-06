@@ -68,7 +68,7 @@ export const words0001To0100: Word[] = [
   { id: "w0065", rank: 65, word: "give", partOfSpeech: "verb", koDefinition: "주다", enDefinition: "to let someone have something", example: "Give me the cup.", exampleKo: "나에게 컵을 주세요." },
   { id: "w0066", rank: 66, word: "help", partOfSpeech: "verb", koDefinition: "돕다", enDefinition: "to make something easier for someone", example: "I help my mom.", exampleKo: "나는 엄마를 도와요." },
   { id: "w0067", rank: 67, word: "wash", partOfSpeech: "verb", koDefinition: "씻다", enDefinition: "to clean with water", example: "Wash your hands.", exampleKo: "손을 씻으세요." },
-  { id: "w0068", rank: 68, word: "brush", partOfSpeech: "verb", koDefinition: "솔로 닦다", enDefinition: "to clean or smooth something with a brush", example: "I brush my teeth.", exampleKo: "나는 이를 닦아요." },
+  { id: "w0068", rank: 68, word: "brush", partOfSpeech: "verb", koDefinition: "솔로 닦다", enDefinition: "to clean or smooth something with a small tool", example: "I brush my teeth.", exampleKo: "나는 이를 닦아요." },
   { id: "w0069", rank: 69, word: "cook", partOfSpeech: "verb", koDefinition: "요리하다", enDefinition: "to make food ready to eat", example: "Mom cooks soup.", exampleKo: "엄마가 수프를 요리해요." },
   { id: "w0070", rank: 70, word: "smile", partOfSpeech: "verb", koDefinition: "미소 짓다", enDefinition: "to make a happy face with your mouth", example: "The girl smiles.", exampleKo: "그 소녀가 미소 지어요." },
   { id: "w0071", rank: 71, word: "laugh", partOfSpeech: "verb", koDefinition: "웃다", enDefinition: "to make a happy sound", example: "We laugh a lot.", exampleKo: "우리는 많이 웃어요." },
