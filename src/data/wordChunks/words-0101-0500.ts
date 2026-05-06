@@ -19,15 +19,56 @@ function normalizeVerbKoDefinition(koDefinition: string): string {
 }
 
 function verbNounPhrase(koDefinition: string): string {
+  return `${toKoreanCanVerbStem(koDefinition)} 수 있어요`;
+}
+
+function toKoreanCanVerbStem(koDefinition: string): string {
+  const irregulars: Record<string, string> = {
+    걷다: "걸을",
+    듣다: "들을",
+    돕다: "도울",
+    묻다: "물을",
+  };
+  const irregular = irregulars[koDefinition];
+  if (irregular) return irregular;
+
   if (koDefinition.endsWith("하다")) {
-    return `${koDefinition.slice(0, -2)}하기`;
+    return `${koDefinition.slice(0, -2)}할`;
   }
 
-  if (koDefinition.endsWith("다")) {
-    return `${koDefinition.slice(0, -1)}기`;
+  if (!koDefinition.endsWith("다")) return koDefinition;
+
+  const stem = koDefinition.slice(0, -1);
+  const lastChar = stem.at(-1);
+  if (!lastChar) return stem;
+
+  const lastCode = lastChar.charCodeAt(0);
+  const hangulStart = 0xac00;
+  const hangulEnd = 0xd7a3;
+  if (lastCode < hangulStart || lastCode > hangulEnd) return `${stem}을`;
+
+  const syllableIndex = lastCode - hangulStart;
+  const finalConsonantIndex = syllableIndex % 28;
+  if (finalConsonantIndex === 8) return stem;
+
+  if (finalConsonantIndex === 0) {
+    const withRieul = String.fromCharCode(lastCode + 8);
+    return `${stem.slice(0, -1)}${withRieul}`;
   }
 
-  return koDefinition;
+  return `${stem}을`;
+}
+
+function objectParticle(text: string): "을" | "를" {
+  const lastChar = text.at(-1);
+  if (!lastChar) return "를";
+
+  const lastCode = lastChar.charCodeAt(0);
+  const hangulStart = 0xac00;
+  const hangulEnd = 0xd7a3;
+  if (lastCode < hangulStart || lastCode > hangulEnd) return "를";
+
+  return (lastCode - hangulStart) % 28 === 0 ? "를" : "을";
 }
 
 function makeWords(seeds: Seed[], startRank: number, partOfSpeech: PartOfSpeech): Word[] {
@@ -43,9 +84,9 @@ function makeWords(seeds: Seed[], startRank: number, partOfSpeech: PartOfSpeech)
           : `It looks ${word}.`;
     const exampleKo =
       partOfSpeech === "noun"
-        ? `나는 ${koDefinition}을 찾았어요.`
+        ? `나는 ${koDefinition}${objectParticle(koDefinition)} 찾았어요.`
         : partOfSpeech === "verb"
-          ? `나는 ${verbNounPhrase(displayKoDefinition)}를 할 수 있어요.`
+          ? `나는 ${verbNounPhrase(displayKoDefinition)}.`
           : `그것은 ${koDefinition} 느낌이에요.`;
     return {
       id: idFromRank(rank),
@@ -289,7 +330,7 @@ const verbSeeds: Seed[] = [
   ["turn", "돌기", "to move around or change direction"],
   ["visit", "방문하기", "to go see a person or place"],
   ["wait", "기다리기", "to stay until something happens"],
-  ["wave", "손 흔들기", "to move a hand side to side"],
+  ["wave", "손을 흔들기", "to move a hand side to side"],
   ["wear", "입기", "to have clothes on the body"],
   ["wrap", "포장하기", "to cover something with paper"],
   ["bake", "굽기", "to cook with dry heat"],
