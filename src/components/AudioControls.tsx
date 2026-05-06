@@ -1,5 +1,5 @@
 import type { AudioSettings } from "../types/game";
-import { initAudio, playButtonClick } from "../lib/audio";
+import { initAudio, playToggleClick } from "../lib/audio";
 
 type Props = {
   settings: AudioSettings;
@@ -10,19 +10,14 @@ type Props = {
 export function AudioControls({ settings, onMusic, onSfx }: Props) {
   function toggleMusic() {
     initAudio();
-    playButtonClick();
+    playToggleClick();
     onMusic(!settings.musicEnabled);
   }
 
   function toggleSfx() {
     initAudio();
-    if (settings.sfxEnabled) {
-      playButtonClick();
-      onSfx(false);
-    } else {
-      onSfx(true);
-      window.setTimeout(playButtonClick, 0);
-    }
+    playToggleClick();
+    onSfx(!settings.sfxEnabled);
   }
 
   return (

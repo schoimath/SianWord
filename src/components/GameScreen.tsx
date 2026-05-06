@@ -228,7 +228,6 @@ export function GameScreen(props: Props) {
       <BowlingScoreboard frames={frames} score={score} currentIndex={displayFrameIndex} />
       <div className="game-topline">
         <span>{isBonus ? `보너스 ${questionIndex - 9}` : `${questionIndex + 1}프레임`}</span>
-        <strong>현재 총점 {score.total}</strong>
         <div className="game-actions">
           <button onClick={() => setWordInfoOpen(true)} aria-label="현재 단어 도움말">단어 도움말</button>
           <button className="quit-button" onClick={quitGame} aria-label="게임 포기">게임 포기</button>

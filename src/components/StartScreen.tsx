@@ -1,4 +1,5 @@
 import type { AnswerMode, AudioSettings, LevelTarget } from "../types/game";
+import { initAudio, playToggleClick } from "../lib/audio";
 import { AudioControls } from "./AudioControls";
 
 type Props = {
@@ -33,6 +34,18 @@ export function StartScreen(props: Props) {
     window.location.reload();
   }
 
+  function chooseLevel(level: LevelTarget) {
+    initAudio();
+    playToggleClick();
+    props.onLevel(level);
+  }
+
+  function chooseAnswerMode(mode: AnswerMode) {
+    initAudio();
+    playToggleClick();
+    props.onAnswerMode(mode);
+  }
+
   return (
     <main className="start-screen compact-start">
       <div className="start-audio">
@@ -56,7 +69,7 @@ export function StartScreen(props: Props) {
                 key={value}
                 className={props.level === value ? "selected" : ""}
                 disabled={disabled}
-                onClick={() => props.onLevel(value)}
+                onClick={() => chooseLevel(value)}
                 aria-label={`${label} 난이도`}
               >
                 {label}
@@ -70,8 +83,8 @@ export function StartScreen(props: Props) {
       <section className="panel start-options">
         <h2>답지 언어</h2>
         <div className="segmented">
-          <button className={props.answerMode === "ko" ? "selected" : ""} onClick={() => props.onAnswerMode("ko")}>한글 모드</button>
-          <button className={props.answerMode === "en" ? "selected" : ""} onClick={() => props.onAnswerMode("en")}>영어 모드</button>
+          <button className={props.answerMode === "ko" ? "selected" : ""} onClick={() => chooseAnswerMode("ko")}>한글 모드</button>
+          <button className={props.answerMode === "en" ? "selected" : ""} onClick={() => chooseAnswerMode("en")}>영어 모드</button>
         </div>
       </section>
 

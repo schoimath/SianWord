@@ -12,13 +12,15 @@ type Props = {
 export function WordQuestion({ question, selectedIds, correctAnswered, characterMood, onSelect }: Props) {
   return (
     <section className="question-zone">
-      <CharacterFace
-        mood={characterMood}
-        alternateMood={characterMood === "normal" ? "curious" : undefined}
-        animate={characterMood === "normal"}
-        className="question-character"
-      />
-      <p className="part-label">{question.correctWord.partOfSpeech}</p>
+      <div className="question-character-wrap">
+        <CharacterFace
+          mood={characterMood}
+          alternateMood={characterMood === "normal" ? "curious" : undefined}
+          animate={characterMood === "normal"}
+          className="question-character"
+        />
+        <p className="part-label character-part-label">{question.correctWord.partOfSpeech}</p>
+      </div>
       <h2>{question.correctWord.word}</h2>
       <div className="options">
         {question.options.map((option, index) => {
