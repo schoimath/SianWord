@@ -6,9 +6,35 @@ function idFromRank(rank: number): string {
   return `w${String(rank).padStart(4, "0")}`;
 }
 
+function normalizeVerbKoDefinition(koDefinition: string): string {
+  if (koDefinition.endsWith("하기")) {
+    return `${koDefinition.slice(0, -2)}하다`;
+  }
+
+  if (koDefinition.endsWith("기")) {
+    return `${koDefinition.slice(0, -1)}다`;
+  }
+
+  return koDefinition;
+}
+
+function verbNounPhrase(koDefinition: string): string {
+  if (koDefinition.endsWith("하다")) {
+    return `${koDefinition.slice(0, -2)}하기`;
+  }
+
+  if (koDefinition.endsWith("다")) {
+    return `${koDefinition.slice(0, -1)}기`;
+  }
+
+  return koDefinition;
+}
+
 function makeWords(seeds: Seed[], startRank: number, partOfSpeech: PartOfSpeech): Word[] {
   return seeds.map(([word, koDefinition, enDefinition], index) => {
     const rank = startRank + index;
+    const displayKoDefinition =
+      partOfSpeech === "verb" ? normalizeVerbKoDefinition(koDefinition) : koDefinition;
     const example =
       partOfSpeech === "noun"
         ? `I found the ${word}.`
@@ -19,14 +45,14 @@ function makeWords(seeds: Seed[], startRank: number, partOfSpeech: PartOfSpeech)
       partOfSpeech === "noun"
         ? `나는 ${koDefinition}을 찾았어요.`
         : partOfSpeech === "verb"
-          ? `나는 ${koDefinition}를 할 수 있어요.`
+          ? `나는 ${verbNounPhrase(displayKoDefinition)}를 할 수 있어요.`
           : `그것은 ${koDefinition} 느낌이에요.`;
     return {
       id: idFromRank(rank),
       rank,
       word,
       partOfSpeech,
-      koDefinition,
+      koDefinition: displayKoDefinition,
       enDefinition,
       example,
       exampleKo,

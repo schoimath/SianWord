@@ -9,18 +9,111 @@ function idFromRank(rank: number): string {
   return `w${String(rank).padStart(4, "0")}`;
 }
 
-function flattenGroups(groups: Group[]): Array<[string, string, string]> {
+function normalizeVerbKoDefinition(koDefinition: string): string {
+  if (koDefinition.endsWith("하기")) {
+    return `${koDefinition.slice(0, -2)}하다`;
+  }
+
+  if (koDefinition.endsWith("기")) {
+    return `${koDefinition.slice(0, -1)}다`;
+  }
+
+  return koDefinition;
+}
+
+function verbNounPhrase(koDefinition: string): string {
+  if (koDefinition.endsWith("하다")) {
+    return `${koDefinition.slice(0, -2)}하기`;
+  }
+
+  if (koDefinition.endsWith("다")) {
+    return `${koDefinition.slice(0, -1)}기`;
+  }
+
+  return koDefinition;
+}
+
+function nounDescription(hint: string): string {
+  const descriptions: Record<string, string> = {
+    "a family or social person": "a person in a family, class, team, or neighborhood",
+    "a job or role": "a person who has a helpful job or special role",
+    "a place people visit": "a place people can go to in everyday life",
+    "a city or building part": "a part of a street, city, house, or building",
+    "a thing used at home": "a home item used for cleaning, fixing, or daily life",
+    "a food for meals": "food people can eat at a meal",
+    "a fruit or sweet food": "fruit or sweet food people can eat",
+    "a body part": "a part of a person's body",
+    "a natural place": "a place you can find in nature",
+    "a nature or weather thing": "something seen in nature or weather",
+    "a small object or container": "a small thing people use, hold, or keep things in",
+    "something to wear or carry": "something people wear, carry, or keep with them",
+    "a tool or craft item": "a tool or material used to make, fix, or create things",
+    "a game or sports thing": "something used in games, play, or sports",
+    "a simple social life word": "an everyday idea people use when talking or living together",
+  };
+
+  return descriptions[hint] ?? "an everyday thing, person, place, or idea";
+}
+
+function verbDescription(hint: string): string {
+  const descriptions: Record<string, string> = {
+    "to do a learning action": "to learn, think, choose, or understand something",
+    "to move or act": "to move, act, or do something with your body",
+    "to help or choose": "to help, choose, share, or take care of something",
+    "to use the body or voice": "to use your body, voice, or senses",
+    "to make or change something": "to make, change, cook, or record something",
+    "to clean, mark, or trade": "to clean, mark, move, or exchange something",
+    "to join daily life": "to take part in daily life or make something happen",
+    "to think or speak": "to think, speak, prepare, or understand",
+    "to do a careful action": "to do something carefully with attention",
+    "to finish or move forward": "to finish, move, wonder, or go forward",
+  };
+
+  return descriptions[hint] ?? "to do an everyday action";
+}
+
+function adjectiveDescription(hint: string): string {
+  const descriptions: Record<string, string> = {
+    "a feeling word": "how someone feels or how something seems",
+    "a size, color, or look word": "a size, color, shape, or look",
+    "a condition word": "the condition, amount, or state of something",
+    "a personality or mood word": "a person's mood, character, or quality",
+    "a simple describing word": "a simple quality of a person, place, or thing",
+  };
+
+  return descriptions[hint] ?? "a quality of a person, place, or thing";
+}
+
+function createDefinition(word: string, hint: string, partOfSpeech: PartOfSpeech): string {
+  const article = /^[aeiou]/.test(word) ? "an" : "a";
+
+  if (partOfSpeech === "noun") {
+    return `${article} ${word} is ${nounDescription(hint)}`;
+  }
+
+  if (partOfSpeech === "verb") {
+    return `to ${word} means ${verbDescription(hint)}`;
+  }
+
+  return `${word} describes ${adjectiveDescription(hint)}`;
+}
+
+function flattenGroups(
+  groups: Group[],
+  partOfSpeech: PartOfSpeech,
+): Array<[string, string, string]> {
   return groups.flatMap((group) =>
-    group.items.map(([word, koDefinition]): [string, string, string] => [
-      word,
-      koDefinition,
-      `${group.hint} called ${word}`,
-    ]),
+    group.items.map(([word, koDefinition]): [string, string, string] => {
+      const displayKoDefinition =
+        partOfSpeech === "verb" ? normalizeVerbKoDefinition(koDefinition) : koDefinition;
+
+      return [word, displayKoDefinition, createDefinition(word, group.hint, partOfSpeech)];
+    }),
   );
 }
 
 function makeWords(groups: Group[], startRank: number, partOfSpeech: PartOfSpeech): Word[] {
-  return flattenGroups(groups).map(([word, koDefinition, enDefinition], index) => {
+  return flattenGroups(groups, partOfSpeech).map(([word, koDefinition, enDefinition], index) => {
     const rank = startRank + index;
     const article = /^[aeiou]/.test(word) ? "an" : "a";
     const example =
@@ -33,7 +126,7 @@ function makeWords(groups: Group[], startRank: number, partOfSpeech: PartOfSpeec
       partOfSpeech === "noun"
         ? `나는 ${koDefinition}을 알아요.`
         : partOfSpeech === "verb"
-          ? `나는 오늘 ${koDefinition}를 할 수 있어요.`
+          ? `나는 오늘 ${verbNounPhrase(koDefinition)}를 할 수 있어요.`
           : `그것은 ${koDefinition} 느낌이에요.`;
     return {
       id: idFromRank(rank),
@@ -118,16 +211,16 @@ const verbGroups: Group[] = [
   { hint: "to use the body or voice", items: [["allow", "허락하기"], ["bend", "구부리기"], ["breathe", "숨쉬기"], ["call", "부르기"], ["chase", "쫓아가기"], ["circle", "동그라미 치기"], ["cough", "기침하기"], ["dive", "뛰어들기"], ["drip", "뚝뚝 떨어지기"], ["earn", "얻기"], ["enter", "들어가기"], ["escape", "빠져나오기"], ["exercise", "운동하기"], ["sparkle", "반짝이기"], ["whirl", "빙글 돌기"]] },
   { hint: "to make or change something", items: [["blink", "눈 깜박이기"], ["bloom", "꽃피기"], ["change", "바꾸기"], ["charge", "충전하기"], ["chew", "씹기"], ["fry", "튀기기"], ["heat", "데우기"], ["introduce", "소개하기"], ["knit", "뜨개질하기"], ["mail", "우편 보내기"], ["match", "어울리기"], ["order", "주문하기"], ["photograph", "사진 찍기"], ["record", "기록하기"], ["reply", "답장하기"]] },
   { hint: "to clean, mark, or trade", items: [["report", "알리기"], ["rescue", "구해주기"], ["rub", "문지르기"], ["scan", "살펴보기"], ["scrub", "박박 닦기"], ["seal", "봉하기"], ["sprinkle", "뿌리기"], ["steer", "조종하기"], ["step", "걸음 내딛기"], ["switch", "바꾸기"], ["text", "문자 보내기"], ["trade", "교환하기"], ["trust", "믿고 맡기기"], ["advise", "조언하기"], ["agree", "동의하기"]] },
-  { hint: "to join daily life", items: [["appear", "나타나기"], ["belong", "속하기"], ["bounce", "튀기기"], ["celebrate", "축하하기"], ["chat", "수다 떨기"], ["complete", "완성하기"], ["create", "만들어내기"], ["design", "디자인하기"], ["drift", "떠다니기"], ["foldaway", "접어 넣기"], ["glow", "은은히 빛나기"], ["grin", "활짝 웃기"], ["guide", "안내하기"], ["handle", "다루기"], ["include", "포함하기"]] },
+  { hint: "to join daily life", items: [["appear", "나타나기"], ["belong", "속하기"], ["bounce", "튀기기"], ["celebrate", "축하하기"], ["chat", "수다 떨기"], ["complete", "완성하기"], ["create", "만들어내기"], ["design", "디자인하기"], ["drift", "떠다니기"], ["assemble", "모아 만들기"], ["glow", "은은히 빛나기"], ["grin", "활짝 웃기"], ["guide", "안내하기"], ["handle", "다루기"], ["include", "포함하기"]] },
   { hint: "to think or speak", items: [["jog", "조깅하기"], ["judge", "판단하기"], ["label", "이름표 붙이기"], ["list", "목록 쓰기"], ["manage", "해내기"], ["mention", "언급하기"], ["mind", "신경 쓰기"], ["obey", "따르기"], ["pause", "잠깐 멈추기"], ["perform", "공연하기"], ["prepare", "준비하기"], ["raise", "올리기"], ["realize", "깨닫기"], ["receive", "받기"], ["recognize", "알아보기"]] },
   { hint: "to do a careful action", items: [["reflect", "비치기"], ["relax", "긴장 풀기"], ["replace", "바꾸어 넣기"], ["request", "요청하기"], ["respect", "존중하기"], ["review", "복습하기"], ["polish", "윤내기"], ["separate", "분리하기"], ["settle", "자리잡기"], ["sketch", "스케치하기"], ["soak", "담그기"], ["stare", "빤히 보기"], ["support", "도와주기"], ["suppose", "생각하기"], ["surprise", "놀라게 하기"]] },
-  { hint: "to finish or move forward", items: [["tidyup", "정돈하기"], ["translate", "옮겨 말하기"], ["trim", "다듬기"], ["tumble", "굴러 넘어지기"], ["understand", "이해하기"], ["volunteer", "자원하기"], ["wander", "거닐기"], ["weigh", "무게 재기"], ["welcome", "환영하기"], ["wonder", "궁금해하기"], ["yawn", "하품하기"], ["zoom", "쌩 움직이기"], ["estimate", "어림하기"], ["pointout", "가리켜 말하기"], ["printout", "인쇄해 내기"]] },
+  { hint: "to finish or move forward", items: [["arrange", "정돈하기"], ["translate", "옮겨 말하기"], ["trim", "다듬기"], ["tumble", "굴러 넘어지기"], ["understand", "이해하기"], ["volunteer", "자원하기"], ["wander", "거닐기"], ["weigh", "무게 재기"], ["welcome", "환영하기"], ["wonder", "궁금해하기"], ["yawn", "하품하기"], ["zoom", "쌩 움직이기"], ["estimate", "어림하기"], ["indicate", "가리켜 보이기"], ["publish", "내보내기"]] },
 ];
 
 const adjectiveGroups: Group[] = [
   { hint: "a feeling word", items: [["afraid", "두려운"], ["alive", "살아 있는"], ["alone", "혼자인"], ["amazing", "놀라운"], ["basic", "기본적인"], ["bent", "구부러진"], ["better", "더 나은"], ["bitter", "쓴맛 나는"], ["blank", "빈칸의"], ["broad", "폭넓은"], ["charming", "매력적인"], ["chilly", "쌀쌀한"], ["clear", "맑은"], ["clever", "영리한"], ["creamy", "부드럽고 진한"], ["crunchy", "바삭한"], ["daily", "매일의"], ["dizzy", "어지러운"], ["double", "두 배의"], ["fair", "공평한"], ["fancy", "화려한"], ["far", "먼"], ["flat", "평평한"], ["fluffy", "폭신한"], ["free", "자유로운"]] },
-  { hint: "a size, color, or look word", items: [["giant", "거대한"], ["gray", "회색의"], ["green", "초록색의"], ["icy", "얼음 같은"], ["local", "지역의"], ["magic", "마법 같은"], ["major", "큰"], ["minor", "작은"], ["minty", "민트 맛의"], ["modern", "현대적인"], ["monthly", "매달의"], ["narrow", "좁은"], ["natural", "자연스러운"], ["near", "가까운"], ["official", "공식적인"], ["orangeish", "주황빛의"], ["perfect", "완벽한"], ["pink", "분홍색의"], ["plain", "수수한"], ["plastic", "플라스틱의"], ["purple", "보라색의"], ["quick", "빠른"], ["rapid", "재빠른"], ["regular", "규칙적인"], ["rich", "풍부한"]] },
-  { hint: "a condition word", items: [["rough", "거친"], ["royal", "왕실의"], ["same", "같은"], ["secretive", "비밀스러운"], ["serious", "진지한"], ["several", "몇몇의"], ["silent", "조용한"], ["silver", "은빛의"], ["single", "하나의"], ["slim", "날씬한"], ["solid", "단단한"], ["square", "네모난"], ["steady", "안정된"], ["stormy", "폭풍우 치는"], ["striped", "줄무늬의"], ["sunlit", "햇빛 비친"], ["tan", "황갈색의"], ["thankful", "고마워하는"], ["useable", "사용할 수 있는"], ["usual", "보통의"], ["violet", "보라빛의"], ["weekly", "매주의"], ["whole", "전체의"], ["yellow", "노란색의"], ["yummy", "맛있는"]] },
+  { hint: "a size, color, or look word", items: [["giant", "거대한"], ["gray", "회색의"], ["green", "초록색의"], ["icy", "얼음 같은"], ["local", "지역의"], ["magic", "마법 같은"], ["major", "큰"], ["minor", "작은"], ["minty", "민트 맛의"], ["modern", "현대적인"], ["monthly", "매달의"], ["narrow", "좁은"], ["natural", "자연스러운"], ["near", "가까운"], ["official", "공식적인"], ["amber", "호박빛의"], ["perfect", "완벽한"], ["pink", "분홍색의"], ["plain", "수수한"], ["plastic", "플라스틱의"], ["purple", "보라색의"], ["quick", "빠른"], ["rapid", "재빠른"], ["regular", "규칙적인"], ["rich", "풍부한"]] },
+  { hint: "a condition word", items: [["rough", "거친"], ["royal", "왕실의"], ["same", "같은"], ["secretive", "비밀스러운"], ["serious", "진지한"], ["several", "몇몇의"], ["silent", "조용한"], ["silver", "은빛의"], ["single", "하나의"], ["slim", "날씬한"], ["solid", "단단한"], ["square", "네모난"], ["steady", "안정된"], ["stormy", "폭풍우 치는"], ["striped", "줄무늬의"], ["sunlit", "햇빛 비친"], ["tan", "황갈색의"], ["thankful", "고마워하는"], ["usable", "사용할 수 있는"], ["usual", "보통의"], ["violet", "보라빛의"], ["weekly", "매주의"], ["whole", "전체의"], ["yellow", "노란색의"], ["yummy", "맛있는"]] },
   { hint: "a personality or mood word", items: [["able", "할 수 있는"], ["active", "활동적인"], ["actual", "실제의"], ["adorable", "아주 귀여운"], ["alert", "깨어 있는"], ["balanced", "균형 잡힌"], ["blushing", "얼굴이 빨개진"], ["boring", "지루한"], ["central", "가운데의"], ["certain", "확실한"], ["classic", "전통적인"], ["correct", "맞는"], ["creative", "창의적인"], ["curved", "휘어진"], ["dear", "소중한"], ["equal", "같은 양의"], ["excellent", "아주 훌륭한"], ["final", "마지막의"], ["formal", "격식을 차린"], ["honest", "정직한"], ["hopeful", "희망찬"], ["ideal", "이상적인"], ["joyful", "기쁜"], ["merry", "즐거운"], ["patient", "참을성 있는"]] },
   { hint: "a simple describing word", items: [["private", "개인적인"], ["proper", "알맞은"], ["public", "공공의"], ["real", "진짜의"], ["recent", "최근의"], ["responsible", "책임감 있는"], ["similar", "비슷한"], ["social", "사교적인"], ["stable", "안정적인"], ["grateful", "고마워하는"], ["upbeat", "활기찬"], ["valuable", "소중한"], ["visible", "보이는"], ["pleasant", "기분 좋은"], ["yearly", "매년의"], ["zesty", "상큼한"], ["polished", "반짝이는"], ["rosy", "장밋빛의"], ["leafy", "잎이 많은"], ["snowy", "눈 덮인"], ["portable", "들고 다닐 수 있는"], ["foldable", "접을 수 있는"], ["washable", "씻을 수 있는"], ["readable", "읽기 쉬운"], ["playful", "장난기 있는"]] },
 ];
