@@ -22,7 +22,7 @@ const levels: Array<[LevelTarget, string]> = [
 ];
 
 export function StartScreen(props: Props) {
-  const version = "0.1.20260506.0000";
+  const version = __APP_VERSION__;
 
   async function updateApp() {
     const storedVersion = localStorage.getItem("word-bowling-version");
